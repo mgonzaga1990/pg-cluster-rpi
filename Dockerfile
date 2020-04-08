@@ -9,6 +9,7 @@ ENV VERSION=10
 #should define outside of this image
 ENV CLUSTER='Y'
 ENV IS_SLAVE='Y'
+ENV MASTER_HOST=192.168.1.36
 
 ENV CONFIG_PATH=/etc/postgresql/${VERSION}/main
 
