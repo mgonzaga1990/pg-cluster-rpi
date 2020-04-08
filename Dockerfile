@@ -3,16 +3,19 @@ FROM ubuntu
 RUN apt-get update \
     && apt-get install postgresql postgresql-client postgresql-contrib -y
 
-ENV IPS=
 ENV PORT=5432
 ENV VERSION=10
+
+#should define outside of this image
+ENV CLUSTER='Y'
+ENV IS_SLAVE='Y'
 
 ENV CONFIG_PATH=/etc/postgresql/${VERSION}/main
 
 RUN mkdir -p /var/lib/${VERSION}/main/archive/
 
-#COPY entrypoint.sh /usr/bin
-#RUN chmod +x /usr/bin/entrypoint.sh
+COPY entrypoint.sh /usr/bin
+RUN chmod +x /usr/bin/entrypoint.sh
 
 USER postgres
 
@@ -28,6 +31,11 @@ RUN echo "listen_addresses='*'" >> ${CONFIG_PATH}/postgresql.conf
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible.
 RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/${VERSION}/main/pg_hba.conf
+
+
+#Execute script if clustering
+RUN /usr/bin/entrypoint.sh
+
 
 EXPOSE ${PORT}
 
