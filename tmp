@@ -1,0 +1,23 @@
+
+postgresql.conf
+
+#wal_level = replica
+#archive_mode = off
+#archive_command = ''
+#max_wal_senders = 10
+#wal_keep_segments = 0
+
+#hot_standby = on (slave)
+
+IS_SLAVE
+MASTER_PORT
+MASTER_IP
+IP_SLAVE
+
+
+pg_hba.conf
+host    replication     replica      <slave ip>/24            md5
+
+
+docker run -p 5432:5432 -e postgre
+docker run -p 5432:5432 -e CLUSTER="Y" -e IS_SLAVE="Y" postgre
