@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin"
 
 #SET Listener Address
 echo "listen_addresses='*'" >> ${CONFIG_PATH}/postgresql.conf
@@ -33,12 +34,6 @@ else
    echo "setting wal_keep_segments to 8"
    sed -i "s/#wal_keep_segments = 0/wal_keep_segments = 8/g"  /etc/postgresql/${VERSION}/main/postgresql.conf
 
-   #archive command
-   echo "setting archive_mode to on"
-   sed -i "s/#archive_mode = off/archive_mode = on/g"  /etc/postgresql/${VERSION}/main/postgresql.conf
-   echo "archive command = 'cp -i %p /var/lib/postgresql/${VERSION}/main/archive/%f'"
-   echo "archive_command = 'cp -i %p /var/lib/postgresql/${VERSION}/main/archive/%f'" >>  /etc/postgresql/${VERSION}/main/postgresql.conf
-
    #change the value to 8.
    #echo 'checkpoint_segments = 8 >> /etc/postgresql/${VERSION}/main/postgresql.conf
 
@@ -47,6 +42,10 @@ else
     echo "setting hot_standby to on"
     sed -i "s/#hot_standby = on/ hot_standby = on/g"  /etc/postgresql/${VERSION}/main/postgresql.conf 
  
+    echo "Synchronizing from Master"
+    #Syncronize Data from Master server to Slave server
+    pg_basebackup -h ${MASTER_HOST} -D /var/lib/postgresql/${VERSION}/main -U replica -v -P
+
     #create recovery file
     echo "Creating recovery.conf file in /var/lib/postgresql/${VERSION}/main"
     RECOVERY_PATH=/var/lib/postgresql/${VERSION}/main/recovery.conf
@@ -57,6 +56,14 @@ else
     echo "trigger_file = '/tmp/postgresql.trigger.5432'" >> ${RECOVERY_PATH}
    else
     echo "Setup detected to be the master"
+    
+    #archive command
+    echo "setting archive_mode to on"
+    sed -i "s/#archive_mode = off/archive_mode = on/g"  /etc/postgresql/${VERSION}/main/postgresql.conf
+    echo "archive command = 'cp -i %p /var/lib/postgresql/${VERSION}/main/archive/%f'"
+    echo "archive_command = 'cp -i %p /var/lib/postgresql/${VERSION}/main/archive/%f'" >>  /etc/postgresql/${VERSION}/main/postgresql.conf
+
+
     #TODO : add for multiple slave
     echo "configuring slave ips[$IP_SLAVE]"
     echo "host    replication     replica   $IP_SLAVE/24 md5" >> /etc/postgresql/${VERSION}/main/pg_hba.conf 
